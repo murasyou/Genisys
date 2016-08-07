@@ -1554,8 +1554,13 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 
 			if($entity instanceof Arrow and $entity->hadCollision){
 				$item = Item::get(Item::ARROW, $entity->getPotionId(), 1);
-				if($this->isSurvival() and !$this->getFloatingInventory()->canAddItem($item)){
-					continue;
+				
+				$add = false;
+				if(!$this->server->allowInventoryCheats and !$this->isCreative()){
+					if(!$this->getFloatingInventory()->canAddItem($item)){
+						continue;
+					}
+					$add = true;
 				}
 
 				$this->server->getPluginManager()->callEvent($ev = new InventoryPickupArrowEvent($this->inventory, $entity));
@@ -1572,17 +1577,22 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				$pk->eid = 0;
 				$pk->target = $entity->getId();
 				$this->dataPacket($pk);
-				//This may cause client crash
-
-				$this->getFloatingInventory()->addItem(clone $item);
+				
+				if($add){
+					$this->getFloatingInventory()->addItem(clone $item);
+				}
 				$entity->kill();
 			}elseif($entity instanceof DroppedItem){
 				if($entity->getPickupDelay() <= 0){
 					$item = $entity->getItem();
 
 					if($item instanceof Item){
-						if($this->isSurvival() and !$this->getFloatingInventory()->canAddItem($item)){
-							continue;
+						$add = false;
+						if(!$this->server->allowInventoryCheats and !$this->isCreative()){
+							if(!$this->getFloatingInventory()->canAddItem($item)){
+								continue;
+							}
+							$add = true;
 						}
 
 						$this->server->getPluginManager()->callEvent($ev = new InventoryPickupItemEvent($this->inventory, $entity));
@@ -1610,7 +1620,9 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 						$pk->target = $entity->getId();
 						$this->dataPacket($pk);
 
-						$this->getFloatingInventory()->addItem(clone $item);
+						if($add){
+							$this->getFloatingInventory()->addItem(clone $item);
+						}
 						$entity->kill();
 					}
 				}
@@ -3211,9 +3223,6 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				}
 				$this->craftingType = 0;
 				if(isset($this->windowIndex[$packet->windowid])){
-					if($this->windowIndex[$packet->windowid] instanceof AnvilInventory){
-						$this->anvilItem = null;
-					}
 					$this->server->getPluginManager()->callEvent(new InventoryCloseEvent($this->windowIndex[$packet->windowid], $this));
 					$this->removeWindow($this->windowIndex[$packet->windowid]);
 				}
