@@ -1554,7 +1554,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 
 			if($entity instanceof Arrow and $entity->hadCollision){
 				$item = Item::get(Item::ARROW, $entity->getPotionId(), 1);
-				if($this->isSurvival() and !$this->inventory->canAddItem($item)){
+				if($this->isSurvival() and !$this->getFloatingInventory()->canAddItem($item)){
 					continue;
 				}
 
@@ -1563,7 +1563,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 					continue;
 				}
 
-				/*$pk = new TakeItemEntityPacket();
+				$pk = new TakeItemEntityPacket();
 				$pk->eid = $this->getId();
 				$pk->target = $entity->getId();
 				Server::broadcastPacket($entity->getViewers(), $pk);
@@ -1571,17 +1571,17 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				$pk = new TakeItemEntityPacket();
 				$pk->eid = 0;
 				$pk->target = $entity->getId();
-				$this->dataPacket($pk);*/
+				$this->dataPacket($pk);
 				//This may cause client crash
 
-				$this->inventory->addItem(clone $item);
+				$this->getFloatingInventory()->addItem(clone $item);
 				$entity->kill();
 			}elseif($entity instanceof DroppedItem){
 				if($entity->getPickupDelay() <= 0){
 					$item = $entity->getItem();
 
 					if($item instanceof Item){
-						if($this->isSurvival() and !$this->inventory->canAddItem($item)){
+						if($this->isSurvival() and !$this->getFloatingInventory()->canAddItem($item)){
 							continue;
 						}
 
@@ -3243,6 +3243,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				$recipe = $this->server->getCraftingManager()->getRecipe($packet->id);
 
 				if($recipe === null or (($recipe instanceof BigShapelessRecipe or $recipe instanceof BigShapedRecipe) and $this->craftingType === 0)){
+					$this->server->getLogger()->debug("Null (unknown) crafting recipe received from ".$this->getName()." for ".$packet->output[0]);
 					$this->inventory->sendContents($this);
 					break;
 				}
