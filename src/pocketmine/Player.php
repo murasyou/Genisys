@@ -3504,10 +3504,13 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 
 					//TODO: Make Anvils use the floating inventory. They do not currently function with the new transaction API.
 
-					$this->craftingType = 0;
 					$inv = $this->windowIndex[$packet->windowid];
+					$achievements = [];
 
-					if($inv instanceof EnchantInventory and $packet->item->hasEnchantments()){
+					if($inv instanceof FurnaceInventory and $inv->getItem($packet->slot)->getId() === Item::IRON_INGOT and $packet->slot === FurnaceInventory::RESULT){
+						$achievements[] = "acquireIron";
+
+					}elseif($inv instanceof EnchantInventory and $packet->item->hasEnchantments()){
 						$inv->onEnchant($this, $inv->getItem($packet->slot), $packet->item);
 
 					}/*elseif($inv instanceof AnvilInventory){
@@ -3522,14 +3525,13 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 						}
 					}*/
 
-					$transaction = new BaseTransaction($inv, $packet->slot, $packet->item);
+					$transaction = new BaseTransaction($inv, $packet->slot, $packet->item, $achievements);
 				}else{
 					//Client sent a transaction for a window which the server doesn't think they have open
 					break;
 				}
 
 				$this->getTransactionQueue()->addTransaction($transaction);
-				//TODO: Fix "Acquire Iron" achievement
 
 				break;
 			case ProtocolInfo::BLOCK_ENTITY_DATA_PACKET:
