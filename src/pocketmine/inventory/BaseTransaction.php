@@ -43,10 +43,11 @@ class BaseTransaction implements Transaction{
 	protected $achievements = [];
 
 	/**
-	 * @param Inventory|null $inventory
-	 * @param int|null       $slot
-	 * @param Item           $targetItem
-	 * @param int            $transactionType
+	 * @param Inventory $inventory
+	 * @param int       $slot
+	 * @param Item      $targetItem
+	 * @param string[]  $achievements
+	 * @param int       $transactionType
 	 */
 	public function __construct($inventory, $slot, Item $targetItem, $achievements = [], $transactionType = Transaction::TYPE_NORMAL){
 		$this->inventory = $inventory;
@@ -171,18 +172,16 @@ class BaseTransaction implements Transaction{
 						"out" => null];
 			}else{
 				//Should be impossible (identical items and no count change)
-				//This should be caught by the first condition even if it was possible, so it's safe enough to...
-				echo "Wow, you broke the code\n";
+				//This should be caught by the first condition even if it was possible
 				return null;
 			}
 		}elseif($sourceItem->getId() !== Item::AIR and $this->targetItem->getId() === Item::AIR){
-			//Slot emptied
-			//return the item removed
+			//Slot emptied (item removed)
 			return ["in" => null,
 					"out" => clone $sourceItem];
 
 		}elseif($sourceItem->getId() === Item::AIR and $this->targetItem->getId() !== Item::AIR){
-			//Slot filled with a new item (item added)
+			//Slot filled (item added)
 			return ["in" => $this->getTargetItem(),
 					"out" => null];
 
@@ -191,9 +190,14 @@ class BaseTransaction implements Transaction{
 			return ["in" => $this->getTargetItem(),
 					"out" => clone $sourceItem];
 		}
-		//Don't remove this comment until you're sure there's nothing missing.
 	}
 
+	/**
+	 * @param Player $source
+	 * @return bool
+	 *
+	 * Handles transaction execution. Returns whether transaction was successful or not.
+	 */
 
 	public function execute(Player $source): bool{
 		if($this->getInventory()->processSlotChange($this)){ //This means that the transaction should be handled the normal way

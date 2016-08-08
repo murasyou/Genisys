@@ -3550,8 +3550,6 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				}elseif(isset($this->windowIndex[$packet->windowid])){
 					//Transaction for non-player-inventory window, such as anvil, chest, etc.
 
-					//TODO: Make Anvils use the floating inventory. They do not currently function with the new transaction API.
-
 					$inv = $this->windowIndex[$packet->windowid];
 					$achievements = [];
 
@@ -3560,18 +3558,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 
 					}elseif($inv instanceof EnchantInventory and $packet->item->hasEnchantments()){
 						$inv->onEnchant($this, $inv->getItem($packet->slot), $packet->item);
-
-					}/*elseif($inv instanceof AnvilInventory){
-						if($packet->slot === 2){
-							if($packet->item->getId() !== Item::AIR){
-								$inv->setItem($packet->slot, $packet->item, false);
-							}else{
-								if(!$inv->onRename($this)){
-									break; //maybe cheating!
-								}
-							}
-						}
-					}*/
+					}
 
 					$transaction = new BaseTransaction($inv, $packet->slot, $packet->item, $achievements);
 				}else{
